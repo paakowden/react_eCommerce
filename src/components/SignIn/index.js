@@ -1,91 +1,89 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, withRouter } from "react-router-dom";
+import {
+  signInUser,
+  signInWithGoogle,
+  resetAllAuthForms,
+} from "./../../redux/User/user.actions";
+
 import "./styles.scss";
-import { Link } from "react-router-dom";
-//import Button from "./../forms/Button";
-import { signInWithGoogle, auth } from "./../../firebase/utils";
 
 import AuthWrapper from "./../AuthWrapper";
 import FormInput from "./../forms/FormInput";
 import Button from "./../forms/Button";
 
-const initialState = {
-  email: "",
-  password: "",
-};
+const mapState = ({ user }) => ({
+  signInSuccess: user.signInSuccess,
+});
 
-class SignIn extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      ...initialState,
-    };
+const SignIn = (props) => {
+  const { signInSuccess } = useSelector(mapState);
+  const dispatch = useDispatch();
 
-    this.handleChange = this.handleChange.bind(this);
-  }
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  handleChange(e) {
-    const { name, value } = e.target;
-    this.setState({
-      [name]: value,
-    });
-  }
-
-  handleSubmit = async (e) => {
-    e.preventDefault();
-    const { email, password } = this.state;
-
-    try {
-      await auth.signInWithEmailAndPassword(email, password);
-      this.setState({
-        ...initialState,
-      });
-    } catch (err) {
-      // console.log(err)
+  useEffect(() => {
+    if (signInSuccess) {
+      resetForm();
+      dispatch(resetAllAuthForms());
+      props.history.push("/");
     }
+  }, [signInSuccess]);
+
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
   };
 
-  render() {
-    const { email, password } = this.state;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    dispatch(signInUser({ email, password }));
+  };
 
-    const configAuthWrapper = {
-      headline: "LogIn",
-    };
+  const handleGoogleSignIn = () => {
+    dispatch(signInWithGoogle());
+  };
 
-    return (
-      <AuthWrapper {...configAuthWrapper}>
-        <div className="formWrap">
-          <form onSubmit={this.handleSubmit}>
-            <FormInput
-              type="email"
-              name="email"
-              value={email}
-              placeholder="Email"
-              handleChange={this.handleChange}
-            />
+  const configAuthWrapper = {
+    headline: "LogIn",
+  };
 
-            <FormInput
-              type="password"
-              name="password"
-              value={password}
-              placeholder="Password"
-              handleChange={this.handleChange}
-            />
+  return (
+    <AuthWrapper {...configAuthWrapper}>
+      <div className="formWrap">
+        <form onSubmit={handleSubmit}>
+          <FormInput
+            type="email"
+            name="email"
+            value={email}
+            placeholder="Email"
+            handleChange={(e) => setEmail(e.target.value)}
+          />
 
-            <Button type="submit">Login</Button>
+          <FormInput
+            type="password"
+            name="password"
+            value={password}
+            placeholder="Password"
+            handleChange={(e) => setPassword(e.target.value)}
+          />
 
-            <div className="socialSignin">
-              <div className="row">
-                <Button onClick={signInWithGoogle}>Sign in with Google</Button>
-              </div>
+          <Button type="submit">Login</Button>
+
+          <div className="socialSignin">
+            <div className="row">
+              <Button onClick={handleGoogleSignIn}>Sign in with Google</Button>
             </div>
-            <div className="links">
-              <Link to="/recovery">Reset Password</Link>
-            </div>
-          </form>
-        </div>
-      </AuthWrapper>
-    );
-  }
-}
+          </div>
+          <div className="links">
+            <Link to="/recovery">Reset Password</Link>
+          </div>
+        </form>
+      </div>
+    </AuthWrapper>
+  );
+};
 
-export default SignIn;
+export default withRouter(SignIn);
