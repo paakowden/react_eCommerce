@@ -4,7 +4,7 @@ import { signOutUserStart } from "./../../redux/User/user.actions";
 import "./style.scss";
 import { Link } from "react-router-dom";
 
-import Logo from "../../assets/logo.jpg";
+import Logo from "../../assets/logo.png";
 
 const mapState = ({ user }) => ({
   currentUser: user.currentUser,
